@@ -64,8 +64,7 @@ void screenClearCallback() {
   #ifdef DEBUG_SCREEN_CLEAR_CALLBACK
   Serial.println(">>> screenClearCallback");
   #endif
-  // clear does not work properly with multiple matrices connected via parallel inputs
-  memset(leds, 0, sizeof(leds));
+  matrix->clear();
 }
 
 void updateScreenCallback(){
@@ -86,10 +85,6 @@ void drawPixelCallback(int16_t x, int16_t y, uint8_t red, uint8_t green, uint8_t
     Serial.println(")");
   }
   #endif
-
-  // CRGB color = CRGB(matrix->gamma[red], matrix->gamma[green], matrix->gamma[blue]);
-  // matrix->setPassThruColor(color.red*65536 + color.green*256 + color.blue);
-  // matrix->drawPixel(x, y, color);
 
   matrix->drawPixel(x, y, FastLED_NeoMatrix::Color(red, green, blue));
 }
@@ -141,28 +136,27 @@ int fileReadBlockCallback(void * buffer, int numberOfBytes){
 }
 
 void setup() {
+  #ifdef DEBUG
   Serial.begin(9600);
+  #endif
 
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
-  // matrix->begin();
   matrix->setBrightness(BRIGHTNESS);
 
   SPIFFS.begin();
 
+  #ifdef DEBUG
   FSInfo fs_info;
   SPIFFS.info(fs_info);
   printf("\nSPIFFS: %lu of %lu bytes used.\n",
     fs_info.usedBytes, fs_info.totalBytes);
+  #endif
 
   file = SPIFFS.open(GIF_LOOP1_FILE, "r");
   if (!file) {
     Serial.println("file open failed");
     return;
   }
-
-  Serial.println(">>>");
-  Serial.println(file.name());
-  Serial.println(file.size());
 
   decoder.setScreenClearCallback(screenClearCallback);
   decoder.setUpdateScreenCallback(updateScreenCallback);
