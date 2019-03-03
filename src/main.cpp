@@ -8,12 +8,15 @@
 
 #include "GifDecoder.h"
 
-// #define DEBUG
+#include "StorageStack.h"
+#include "SPIFFSStorageItem.h"
+
+#define DEBUG
 
 #ifdef DEBUG
-#define DEBUG_SCREEN_CLEAR_CALLBACK
-#define DEBUG_UPDATE_SCREEN_CALLBACK
-#define DEBUG_DRAW_PIXEL_CALLBACK
+// #define DEBUG_SCREEN_CLEAR_CALLBACK
+// #define DEBUG_UPDATE_SCREEN_CALLBACK
+// #define DEBUG_DRAW_PIXEL_CALLBACK
 // #define DEBUG_FILE_SEEK_CALLBACK
 // #define DEBUG_FILE_POSITION_CALLBACK
 // #define DEBUG_FILE_READ_CALLBACK
@@ -135,6 +138,8 @@ int fileReadBlockCallback(void * buffer, int numberOfBytes){
   return num_read;
 }
 
+StorageStack *storageStack = new StorageStack();
+
 void setup() {
   #ifdef DEBUG
   Serial.begin(9600);
@@ -142,6 +147,11 @@ void setup() {
 
   FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
   matrix->setBrightness(BRIGHTNESS);
+
+  AbstractStorageItem *ssi = new SPIFFSStorageItem();
+  ssi->SetFolder("/");
+
+  storageStack->AddStorageItem(ssi);
 
   SPIFFS.begin();
 
@@ -152,9 +162,11 @@ void setup() {
     fs_info.usedBytes, fs_info.totalBytes);
   #endif
 
-  file = SPIFFS.open(GIF_LOOP1_FILE, "r");
+  file = storageStack->GetNextFile();
   if (!file) {
+    #ifdef DEBUG
     Serial.println("file open failed");
+    #endif
     return;
   }
 
@@ -170,6 +182,14 @@ void setup() {
   decoder.startDecoding();
 }
 
+unsigned long futureTime = 0;
+
 void loop() {
   decoder.decodeFrame();
+
+  if(millis() > futureTime){
+    file = storageStack->GetNextFile();
+    decoder.startDecoding();
+    futureTime = millis() + (3 * 1000);
+  }
 }

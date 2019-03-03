@@ -1,0 +1,6 @@
+{
+    "name": "StorageStack",
+    "build": {
+        "flags": "-fexceptions"
+    }
+}
