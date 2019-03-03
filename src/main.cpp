@@ -11,7 +11,7 @@
 #include "StorageStack.h"
 #include "SPIFFSStorageItem.h"
 
-#define DEBUG
+// #define DEBUG
 
 #ifdef DEBUG
 // #define DEBUG_SCREEN_CLEAR_CALLBACK
@@ -189,7 +189,6 @@ void loop() {
 
   if(millis() > futureTime){
     file = storageStack->GetNextFile();
-    decoder.startDecoding();
-    futureTime = millis() + (3 * 1000);
+    futureTime = millis() + (5 * 1000);
   }
 }
