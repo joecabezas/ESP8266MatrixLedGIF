@@ -7,13 +7,15 @@
 #include "FS.h"
 
 #include "GifDecoder.h"
+#include "OneButton.h"
 
 #include "StorageStack.h"
 #include "SPIFFSStorageItem.h"
 
-// #define DEBUG
+#define DEBUG
 
 #ifdef DEBUG
+#define DEBUG_BUTTON
 // #define DEBUG_SCREEN_CLEAR_CALLBACK
 // #define DEBUG_UPDATE_SCREEN_CALLBACK
 // #define DEBUG_DRAW_PIXEL_CALLBACK
@@ -23,9 +25,8 @@
 // #define DEBUG_FILE_READ_BLOCK_CALLBACK
 #endif
 
-#define GIF_LOOP1_FILE "/loop4.gif"
-
-#define DATA_PIN 5
+#define PIN_MATRIX 5
+#define PIN_BUTTON 4
 
 // Max is 255, 32 is a conservative value to not overload
 // a USB power supply (500mA) for 12x12 pixels.
@@ -139,13 +140,21 @@ int fileReadBlockCallback(void * buffer, int numberOfBytes){
 }
 
 StorageStack *storageStack = new StorageStack();
+OneButton button(PIN_BUTTON, true);
+
+void onClick(){
+  #ifdef DEBUG_BUTTON
+	Serial.print(">>>onClick");
+  #endif
+	file = storageStack->GetNextFile();
+}
 
 void setup() {
   #ifdef DEBUG
   Serial.begin(9600);
   #endif
 
-  FastLED.addLeds<WS2812B, DATA_PIN, GRB>(leds, NUM_LEDS);
+  FastLED.addLeds<WS2812B, PIN_MATRIX, GRB>(leds, NUM_LEDS);
   matrix->setBrightness(BRIGHTNESS);
 
   AbstractStorageItem *ssi = new SPIFFSStorageItem();
@@ -155,12 +164,7 @@ void setup() {
 
   SPIFFS.begin();
 
-  #ifdef DEBUG
-  FSInfo fs_info;
-  SPIFFS.info(fs_info);
-  printf("\nSPIFFS: %lu of %lu bytes used.\n",
-    fs_info.usedBytes, fs_info.totalBytes);
-  #endif
+  button.attachClick(onClick);
 
   file = storageStack->GetNextFile();
   if (!file) {
@@ -182,13 +186,7 @@ void setup() {
   decoder.startDecoding();
 }
 
-unsigned long futureTime = 0;
-
 void loop() {
+  button.tick();
   decoder.decodeFrame();
-
-  if(millis() > futureTime){
-    file = storageStack->GetNextFile();
-    futureTime = millis() + (5 * 1000);
-  }
 }
