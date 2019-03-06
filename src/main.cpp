@@ -5,7 +5,7 @@
 #include <SPI.h>
 #include <SD.h>
 
-// #include "GifDecoder.h"
+#include "GifDecoder.h"
 #include "OneButton.h"
 
 #include "StorageStack.h"
@@ -15,7 +15,7 @@
 #define DEBUG
 
 #ifdef DEBUG
-#define DEBUG_BUTTON
+// #define DEBUG_BUTTON
 // #define DEBUG_SCREEN_CLEAR_CALLBACK
 // #define DEBUG_UPDATE_SCREEN_CALLBACK
 // #define DEBUG_DRAW_PIXEL_CALLBACK
@@ -46,7 +46,7 @@ CRGB leds[NUM_LEDS];
  */
 const uint8_t maxGifWidth = SINGLE_MATRIX_WIDTH;
 const uint8_t maxGifHeight = SINGLE_MATRIX_HEIGHT;
-// GifDecoder<maxGifWidth, maxGifHeight, 12> decoder;
+GifDecoder<maxGifWidth, maxGifHeight, 12> decoder;
 
 File file;
 StorageStack *storageStack = new StorageStack();
@@ -156,15 +156,7 @@ void setup() {
   Serial.begin(9600);
   #endif
 
-  // if (!SD.begin(PIN_SDCARD)) {
-  //   Serial.println("initialization failed!");
-  //   return;
-  // }
-  // Serial.println("done");
-
   sdsi->SetFolder("/gifs");
-
-  // storageStack->AddStorageItem(sdsi);
 
   file = sdsi->GetNextFile();
   if (!file) {
@@ -174,24 +166,24 @@ void setup() {
     return;
   }
 
-  // FastLED.addLeds<WS2812B, PIN_MATRIX, GRB>(leds, NUM_LEDS);
-  // matrix->setBrightness(BRIGHTNESS);
+  FastLED.addLeds<WS2812B, PIN_MATRIX, GRB>(leds, NUM_LEDS);
+  matrix->setBrightness(BRIGHTNESS);
 
   button.attachClick(onClick);
 
-  // decoder.setScreenClearCallback(screenClearCallback);
-  // decoder.setUpdateScreenCallback(updateScreenCallback);
-  // decoder.setDrawPixelCallback(drawPixelCallback);
+  decoder.setScreenClearCallback(screenClearCallback);
+  decoder.setUpdateScreenCallback(updateScreenCallback);
+  decoder.setDrawPixelCallback(drawPixelCallback);
 
-  // decoder.setFileSeekCallback(fileSeekCallback);
-  // decoder.setFilePositionCallback(filePositionCallback);
-  // decoder.setFileReadCallback(fileReadCallback);
-  // decoder.setFileReadBlockCallback(fileReadBlockCallback);
+  decoder.setFileSeekCallback(fileSeekCallback);
+  decoder.setFilePositionCallback(filePositionCallback);
+  decoder.setFileReadCallback(fileReadCallback);
+  decoder.setFileReadBlockCallback(fileReadBlockCallback);
 
-  // decoder.startDecoding();
+  decoder.startDecoding();
 }
 
 void loop() {
   button.tick();
-  // decoder.decodeFrame();
+  decoder.decodeFrame();
 }
