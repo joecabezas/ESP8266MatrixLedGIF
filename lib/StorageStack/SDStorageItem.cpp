@@ -28,7 +28,7 @@ SDStorageItem::SDStorageItem(int pin)
 
 void SDStorageItem::SetFolder(std::string path){
     folderPath = path;
-    RewindDir();
+    dir = SD.open(folderPath.c_str());
 }
 
 File SDStorageItem::GetNextFile()
@@ -77,7 +77,7 @@ void SDStorageItem::RewindDir()
     Serial.println(">>>SDStorageItem::RewindDir");
     #endif
 
-    dir = SD.open(folderPath.c_str());
+    dir.rewindDirectory();
 
     #ifdef DEBUG
     Serial.print("current file after rewind: ");
