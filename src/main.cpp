@@ -3,14 +3,14 @@
 #include <FastLED_NeoMatrix.h>
 #include <FastLED.h>
 #include <SPI.h>
+#include <SD.h>
 
-#include "FS.h"
-
-#include "GifDecoder.h"
+// #include "GifDecoder.h"
 #include "OneButton.h"
 
 #include "StorageStack.h"
 #include "SPIFFSStorageItem.h"
+#include "SDStorageItem.h"
 
 #define DEBUG
 
@@ -27,6 +27,7 @@
 
 #define PIN_MATRIX 5
 #define PIN_BUTTON 4
+#define PIN_SDCARD PIN_SPI_SS
 
 // Max is 255, 32 is a conservative value to not overload
 // a USB power supply (500mA) for 12x12 pixels.
@@ -37,7 +38,19 @@
 #define NUM_LEDS (SINGLE_MATRIX_WIDTH*SINGLE_MATRIX_HEIGHT)
 CRGB leds[NUM_LEDS];
 
+/* template parameters are maxGifWidth, maxGifHeight, lzwMaxBits
+ * 
+ * The lzwMaxBits value of 12 supports all GIFs, but uses 16kB RAM
+ * lzwMaxBits can be set to 10 or 11 for smaller displays to save RAM, but use 12 for large displays
+ * All 32x32-pixel GIFs tested so far work with 11, most work with 10
+ */
+const uint8_t maxGifWidth = SINGLE_MATRIX_WIDTH;
+const uint8_t maxGifHeight = SINGLE_MATRIX_HEIGHT;
+// GifDecoder<maxGifWidth, maxGifHeight, 12> decoder;
+
 File file;
+StorageStack *storageStack = new StorageStack();
+OneButton button(PIN_BUTTON, true);
 
 FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(
   leds,
@@ -53,16 +66,6 @@ FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(
   NEO_TILE_TOP + NEO_TILE_LEFT + 
   NEO_TILE_PROGRESSIVE
 );
-
-/* template parameters are maxGifWidth, maxGifHeight, lzwMaxBits
- * 
- * The lzwMaxBits value of 12 supports all GIFs, but uses 16kB RAM
- * lzwMaxBits can be set to 10 or 11 for smaller displays to save RAM, but use 12 for large displays
- * All 32x32-pixel GIFs tested so far work with 11, most work with 10
- */
-const uint8_t maxGifWidth = SINGLE_MATRIX_WIDTH;
-const uint8_t maxGifHeight = SINGLE_MATRIX_HEIGHT;
-GifDecoder<maxGifWidth, maxGifHeight, 12> decoder;
 
 void screenClearCallback() {
   #ifdef DEBUG_SCREEN_CLEAR_CALLBACK
@@ -139,14 +142,13 @@ int fileReadBlockCallback(void * buffer, int numberOfBytes){
   return num_read;
 }
 
-StorageStack *storageStack = new StorageStack();
-OneButton button(PIN_BUTTON, true);
+AbstractStorageItem *sdsi = new SDStorageItem(PIN_SDCARD);
 
 void onClick(){
   #ifdef DEBUG_BUTTON
-	Serial.print(">>>onClick");
+	Serial.println(">>>onClick");
   #endif
-	file = storageStack->GetNextFile();
+	file = sdsi->GetNextFile();
 }
 
 void setup() {
@@ -154,19 +156,17 @@ void setup() {
   Serial.begin(9600);
   #endif
 
-  FastLED.addLeds<WS2812B, PIN_MATRIX, GRB>(leds, NUM_LEDS);
-  matrix->setBrightness(BRIGHTNESS);
+  // if (!SD.begin(PIN_SDCARD)) {
+  //   Serial.println("initialization failed!");
+  //   return;
+  // }
+  // Serial.println("done");
 
-  AbstractStorageItem *ssi = new SPIFFSStorageItem();
-  ssi->SetFolder("/");
+  sdsi->SetFolder("/gifs");
 
-  storageStack->AddStorageItem(ssi);
+  // storageStack->AddStorageItem(sdsi);
 
-  SPIFFS.begin();
-
-  button.attachClick(onClick);
-
-  file = storageStack->GetNextFile();
+  file = sdsi->GetNextFile();
   if (!file) {
     #ifdef DEBUG
     Serial.println("file open failed");
@@ -174,19 +174,24 @@ void setup() {
     return;
   }
 
-  decoder.setScreenClearCallback(screenClearCallback);
-  decoder.setUpdateScreenCallback(updateScreenCallback);
-  decoder.setDrawPixelCallback(drawPixelCallback);
+  // FastLED.addLeds<WS2812B, PIN_MATRIX, GRB>(leds, NUM_LEDS);
+  // matrix->setBrightness(BRIGHTNESS);
 
-  decoder.setFileSeekCallback(fileSeekCallback);
-  decoder.setFilePositionCallback(filePositionCallback);
-  decoder.setFileReadCallback(fileReadCallback);
-  decoder.setFileReadBlockCallback(fileReadBlockCallback);
+  button.attachClick(onClick);
 
-  decoder.startDecoding();
+  // decoder.setScreenClearCallback(screenClearCallback);
+  // decoder.setUpdateScreenCallback(updateScreenCallback);
+  // decoder.setDrawPixelCallback(drawPixelCallback);
+
+  // decoder.setFileSeekCallback(fileSeekCallback);
+  // decoder.setFilePositionCallback(filePositionCallback);
+  // decoder.setFileReadCallback(fileReadCallback);
+  // decoder.setFileReadBlockCallback(fileReadBlockCallback);
+
+  // decoder.startDecoding();
 }
 
 void loop() {
   button.tick();
-  decoder.decodeFrame();
+  // decoder.decodeFrame();
 }

@@ -1,23 +1,18 @@
-#ifdef REMOVE_THIS_WHEN_FS_FILE_IS_COMPATIBLE
-#ifndef SPIFFS_STORAGE_ITEM_H
-#define SPIFFS_STORAGE_ITEM_H
-
-#include "FS.h"
+#ifndef SD_STORAGE_ITEM_H
+#define SD_STORAGE_ITEM_H
 
 #include "AbstractStorageItem.h"
 
-class SPIFFSStorageItem :public AbstractStorageItem
-{
+class SDStorageItem: public AbstractStorageItem{
     private:
-        Dir dir;
+        File dir;
         std::string folderPath;
     public:
-        SPIFFSStorageItem();
+        SDStorageItem(int pin);
 
         virtual File GetNextFile() override;
         virtual void RewindDir() override;
         virtual void SetFolder(std::string) override;
 };
 
-#endif
 #endif

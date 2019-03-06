@@ -1,3 +1,4 @@
+#ifdef REMOVE_THIS_WHEN_FS_FILE_IS_COMPATIBLE
 #include "SPIFFSStorageItem.h"
 
 #define ERROR_NO_FOLDER_SET 1
@@ -44,3 +45,4 @@ void SPIFFSStorageItem::RewindDir()
 
     dir = SPIFFS.openDir(folderPath.c_str());
 }
+#endif

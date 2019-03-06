@@ -1,12 +1,11 @@
 #ifndef STORAGE_ITEM_H
 #define STORAGE_ITEM_H
 
-#include "FS.h"
+#include <SPI.h>
+#include <SD.h>
 
 class AbstractStorageItem
 {
-private:
-    /* data */
 public:
     virtual File GetNextFile();
     virtual void RewindDir();
