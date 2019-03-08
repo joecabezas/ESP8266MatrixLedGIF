@@ -35,7 +35,11 @@
 
 #define SINGLE_MATRIX_WIDTH 32
 #define SINGLE_MATRIX_HEIGHT 8
-#define NUM_LEDS (SINGLE_MATRIX_WIDTH*SINGLE_MATRIX_HEIGHT)
+
+#define MATRIX_TILE_X 1
+#define MATRIX_TILE_Y 2
+
+#define NUM_LEDS (SINGLE_MATRIX_WIDTH*SINGLE_MATRIX_HEIGHT*MATRIX_TILE_X*MATRIX_TILE_Y)
 CRGB leds[NUM_LEDS];
 
 /* template parameters are maxGifWidth, maxGifHeight, lzwMaxBits
@@ -44,8 +48,10 @@ CRGB leds[NUM_LEDS];
  * lzwMaxBits can be set to 10 or 11 for smaller displays to save RAM, but use 12 for large displays
  * All 32x32-pixel GIFs tested so far work with 11, most work with 10
  */
-const uint8_t maxGifWidth = SINGLE_MATRIX_WIDTH;
-const uint8_t maxGifHeight = SINGLE_MATRIX_HEIGHT;
+#define MAX_GIF_WIDTH 32
+#define MAX_GIF_HEIGHT 16
+const uint8_t maxGifWidth = MAX_GIF_WIDTH;
+const uint8_t maxGifHeight = MAX_GIF_HEIGHT;
 GifDecoder<maxGifWidth, maxGifHeight, 12> decoder;
 
 File file;
@@ -56,8 +62,9 @@ FastLED_NeoMatrix *matrix = new FastLED_NeoMatrix(
   leds,
   SINGLE_MATRIX_WIDTH,
   SINGLE_MATRIX_HEIGHT,
-  1,
-  1, 
+  MATRIX_TILE_X,
+  MATRIX_TILE_Y,
+
   //single matrix
   NEO_MATRIX_TOP      + NEO_MATRIX_LEFT +
   NEO_MATRIX_COLUMNS  + NEO_MATRIX_ZIGZAG + 
